@@ -484,6 +484,7 @@
       justify-content: center;
     }
     .modal-overlay.show { display: flex; }
+    #confirm-modal { z-index: 200; }
     .modal {
       background: #fff;
       border-radius: 12px;
@@ -1600,6 +1601,10 @@
     msgEl.innerHTML = `
       <div style="display:flex;flex-direction:column;gap:12px;margin:4px 0 8px">
         <div>
+          <div style="font-size:.8rem;color:var(--muted);margin-bottom:4px">用户名（登录账号）</div>
+          <input id="eu-username" type="text" value="${esc(u.username)}" style="width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:7px;font-size:.9rem;outline:none" />
+        </div>
+        <div>
           <div style="font-size:.8rem;color:var(--muted);margin-bottom:4px">显示名称</div>
           <input id="eu-name" type="text" value="${esc(u.displayName || u.username)}" style="width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:7px;font-size:.9rem;outline:none" />
         </div>
@@ -1619,19 +1624,26 @@
     okBtn.textContent = '保存修改';
     okBtn.className   = 'btn btn-primary';
     okBtn.onclick = function() {
+      const newUsername = document.getElementById('eu-username').value.trim();
       const newName = document.getElementById('eu-name').value.trim();
       const newPwd  = document.getElementById('eu-pwd').value;
       const newRole = document.getElementById('eu-role').value;
+      if (!newUsername) { showToast('用户名不能为空', 'warn'); return; }
       if (!newName) { showToast('显示名称不能为空', 'warn'); return; }
       const users2 = initUsers();
+      // 检查用户名是否与其他账号重复
+      const dupIdx = users2.findIndex(u => u.username === newUsername && u.id !== id);
+      if (dupIdx >= 0) { showToast('用户名已被其他账号使用', 'warn'); return; }
       const idx = users2.findIndex(u => u.id === id);
       if (idx >= 0) {
+        users2[idx].username    = newUsername;
         users2[idx].displayName = newName;
         users2[idx].role        = newRole;
         if (newPwd) users2[idx].password = newPwd;
         localStorage.setItem(USERS_KEY, JSON.stringify(users2));
         // 如果修改的是当前用户，同步 session
         if (id === currentUser.id) {
+          currentUser.username    = newUsername;
           currentUser.displayName = newName;
           currentUser.role        = newRole;
           sessionStorage.setItem(SESSION_KEY, JSON.stringify(currentUser));
@@ -1888,19 +1900,7 @@
     document.getElementById('confirm-modal').classList.remove('show');
   }
 
-  // ── Modal Overlay Close ──
-  document.getElementById('edit-modal').addEventListener('click', function(e) {
-    if (e.target === this) closeEditModal();
-  });
-  document.getElementById('config-modal').addEventListener('click', function(e) {
-    if (e.target === this) closeConfig();
-  });
-  document.getElementById('confirm-modal').addEventListener('click', function(e) {
-    if (e.target === this) closeConfirm();
-  });
-  document.getElementById('user-mgr-modal').addEventListener('click', function(e) {
-    if (e.target === this) closeUserMgr();
-  });
+
 
   // ══════════════════════════════════════
   //  BOOT
