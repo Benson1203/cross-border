@@ -1,0 +1,1912 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>行程费用记录系统</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --primary: #3b82f6;
+      --primary-dark: #2563eb;
+      --success: #22c55e;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+      --purple: #8b5cf6;
+      --bg: #f1f5f9;
+      --card: #ffffff;
+      --border: #e2e8f0;
+      --text: #1e293b;
+      --muted: #64748b;
+      --radius: 10px;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ══════════════════════════════
+       LOGIN PAGE
+    ══════════════════════════════ */
+    #login-page {
+      display: none;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #1e40af 0%, #3b82f6 60%, #7c3aed 100%);
+      align-items: center;
+      justify-content: center;
+    }
+    #login-page.show { display: flex; }
+    .login-box {
+      background: #fff;
+      border-radius: 16px;
+      padding: 44px 40px 36px;
+      width: 380px;
+      max-width: 94vw;
+      box-shadow: 0 24px 64px rgba(0,0,0,.22);
+      animation: slideUp .25s ease;
+    }
+    .login-logo {
+      text-align: center;
+      margin-bottom: 28px;
+    }
+    .login-logo .icon {
+      font-size: 2.8rem;
+      display: block;
+      margin-bottom: 8px;
+    }
+    .login-logo h2 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .login-logo p {
+      font-size: .82rem;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+    .login-field { margin-bottom: 16px; }
+    .login-field label {
+      display: block;
+      font-size: .82rem;
+      font-weight: 600;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+    .login-field input {
+      width: 100%;
+      padding: 11px 14px;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      font-size: .95rem;
+      outline: none;
+      transition: border-color .2s, box-shadow .2s;
+      background: #f8fafc;
+    }
+    .login-field input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(59,130,246,.15);
+      background: #fff;
+    }
+    .login-btn {
+      width: 100%;
+      padding: 12px;
+      background: linear-gradient(135deg, #2563eb, #3b82f6);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      margin-top: 8px;
+      transition: opacity .2s, transform .12s;
+    }
+    .login-btn:hover   { opacity: .9; }
+    .login-btn:active  { transform: scale(.98); }
+    .login-error {
+      color: var(--danger);
+      font-size: .82rem;
+      text-align: center;
+      margin-top: 10px;
+      min-height: 18px;
+    }
+    .login-guest {
+      text-align: center;
+      margin-top: 18px;
+      font-size: .82rem;
+      color: var(--muted);
+    }
+    .login-guest a {
+      color: var(--primary);
+      cursor: pointer;
+      text-decoration: underline;
+    }
+
+    /* ══════════════════════════════
+       GUEST PAGE
+    ══════════════════════════════ */
+    #guest-page {
+      display: none;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #1e40af 0%, #3b82f6 60%, #7c3aed 100%);
+      align-items: center;
+      justify-content: center;
+    }
+    #guest-page.show { display: flex; }
+    .guest-box {
+      background: #fff;
+      border-radius: 16px;
+      padding: 48px 40px;
+      width: 380px;
+      max-width: 94vw;
+      text-align: center;
+      box-shadow: 0 24px 64px rgba(0,0,0,.22);
+    }
+    .guest-box .icon { font-size: 3rem; margin-bottom: 16px; display: block; }
+    .guest-box h2 { font-size: 1.2rem; font-weight: 700; margin-bottom: 10px; }
+    .guest-box p { font-size: .88rem; color: var(--muted); line-height: 1.7; margin-bottom: 24px; }
+    .guest-box button {
+      padding: 10px 28px;
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: .9rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .guest-box button:hover { background: var(--primary-dark); }
+
+    /* ══════════════════════════════
+       APP PAGE
+    ══════════════════════════════ */
+    #app-page { display: none; }
+    #app-page.show { display: block; }
+
+    /* ── Header ── */
+    header {
+      background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+      color: #fff;
+      padding: 16px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 4px 12px rgba(59,130,246,.35);
+    }
+    header h1 { font-size: 1.4rem; font-weight: 700; letter-spacing: .5px; }
+    .header-right { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+    header .date-text { font-size: .82rem; opacity: .8; }
+    .btn-config {
+      padding: 7px 16px;
+      background: rgba(255,255,255,.18);
+      border: 1.5px solid rgba(255,255,255,.4);
+      border-radius: 7px;
+      color: #fff;
+      font-size: .82rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background .2s;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .btn-config:hover { background: rgba(255,255,255,.28); }
+
+    /* 用户信息 & 登出 */
+    .user-badge {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255,255,255,.12);
+      border: 1px solid rgba(255,255,255,.25);
+      border-radius: 20px;
+      padding: 5px 14px 5px 10px;
+      font-size: .82rem;
+    }
+    .user-badge .avatar {
+      width: 26px; height: 26px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: .75rem; font-weight: 700;
+    }
+    .avatar-super  { background: #fef08a; color: #854d0e; }
+    .avatar-admin  { background: #bbf7d0; color: #166534; }
+    .role-tag {
+      font-size: .72rem;
+      opacity: .75;
+      padding: 1px 6px;
+      border-radius: 10px;
+      background: rgba(255,255,255,.18);
+    }
+    .btn-logout {
+      padding: 5px 12px;
+      background: rgba(239,68,68,.25);
+      border: 1.5px solid rgba(239,68,68,.5);
+      border-radius: 6px;
+      color: #fff;
+      font-size: .78rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .btn-logout:hover { background: rgba(239,68,68,.45); }
+
+    /* ── Layout ── */
+    main { max-width: 1280px; margin: 0 auto; padding: 24px 20px; }
+
+    /* ── Stats ── */
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .stat-card {
+      background: var(--card);
+      border-radius: var(--radius);
+      padding: 18px 20px;
+      border-left: 4px solid var(--primary);
+      box-shadow: 0 1px 4px rgba(0,0,0,.07);
+    }
+    .stat-card.green  { border-color: var(--success); }
+    .stat-card.orange { border-color: var(--warning); }
+    .stat-card.red    { border-color: var(--danger);  }
+    .stat-card .label { font-size: .78rem; color: var(--muted); margin-bottom: 6px; }
+    .stat-card .value { font-size: 1.5rem; font-weight: 700; }
+
+    /* ── Stats Filter Bar ── */
+    .stats-filter {
+      background: var(--card);
+      border-radius: var(--radius);
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 14px;
+      box-shadow: 0 1px 4px rgba(0,0,0,.07);
+    }
+    .stats-filter label { font-size: .82rem; color: var(--muted); font-weight: 500; white-space: nowrap; }
+    .stats-filter input[type="date"] {
+      padding: 6px 10px;
+      border: 1.5px solid var(--border);
+      border-radius: 7px;
+      font-size: .85rem;
+      color: var(--text);
+      background: #f8fafc;
+      cursor: pointer;
+    }
+    .stats-filter input[type="date"]:focus { outline: none; border-color: var(--primary); background: #fff; }
+    .stats-filter .sep { color: var(--muted); font-size: .85rem; }
+    .stats-filter .quick-btns { display: flex; gap: 6px; flex-wrap: wrap; margin-left: auto; }
+    .quick-btn {
+      padding: 5px 12px;
+      border: 1.5px solid var(--border);
+      border-radius: 6px;
+      background: #f8fafc;
+      font-size: .78rem;
+      font-weight: 600;
+      color: var(--muted);
+      cursor: pointer;
+      transition: all .15s;
+    }
+    .quick-btn:hover, .quick-btn.active { background: var(--primary); border-color: var(--primary); color: #fff; }
+    .stats-filter .reset-btn {
+      padding: 5px 12px;
+      border: 1.5px solid var(--border);
+      border-radius: 6px;
+      background: #f8fafc;
+      font-size: .78rem;
+      color: var(--muted);
+      cursor: pointer;
+    }
+    .stats-filter .reset-btn:hover { border-color: var(--danger); color: var(--danger); background: #fff; }
+
+    /* ── Form Card ── */
+    .card {
+      background: var(--card);
+      border-radius: var(--radius);
+      padding: 24px;
+      box-shadow: 0 1px 4px rgba(0,0,0,.07);
+      margin-bottom: 24px;
+    }
+    .card-title {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 18px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .card-title .dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      background: var(--primary);
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 16px;
+    }
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
+    .form-group label { font-size: .82rem; font-weight: 500; color: var(--muted); }
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      padding: 9px 12px;
+      border: 1.5px solid var(--border);
+      border-radius: 7px;
+      font-size: .9rem;
+      color: var(--text);
+      outline: none;
+      transition: border-color .2s, box-shadow .2s;
+      background: #f8fafc;
+    }
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(59,130,246,.15);
+      background: #fff;
+    }
+
+    .form-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+      flex-wrap: wrap;
+    }
+
+    /* ── Buttons ── */
+    .btn {
+      padding: 9px 20px;
+      border: none;
+      border-radius: 7px;
+      font-size: .88rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform .12s, opacity .2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn:active { transform: scale(.97); }
+    .btn-primary  { background: var(--primary);  color: #fff; }
+    .btn-primary:hover  { background: var(--primary-dark); }
+    .btn-success  { background: var(--success);  color: #fff; }
+    .btn-success:hover  { opacity: .88; }
+    .btn-warning  { background: var(--warning);  color: #fff; }
+    .btn-warning:hover  { opacity: .88; }
+    .btn-danger   { background: var(--danger);   color: #fff; }
+    .btn-danger:hover   { opacity: .88; }
+    .btn-purple   { background: var(--purple);   color: #fff; }
+    .btn-purple:hover   { opacity: .88; }
+    .btn-outline  { background: transparent; border: 1.5px solid var(--border); color: var(--text); }
+    .btn-outline:hover  { background: var(--bg); }
+    .btn-sm { padding: 5px 12px; font-size: .8rem; }
+
+    /* ── Toolbar ── */
+    .toolbar {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+    .toolbar input[type="text"] {
+      flex: 1;
+      min-width: 200px;
+      padding: 9px 14px;
+      border: 1.5px solid var(--border);
+      border-radius: 7px;
+      font-size: .88rem;
+      outline: none;
+      background: #f8fafc;
+      transition: border-color .2s;
+    }
+    .toolbar input[type="text"]:focus {
+      border-color: var(--primary);
+      background: #fff;
+    }
+    .toolbar select {
+      padding: 9px 12px;
+      border: 1.5px solid var(--border);
+      border-radius: 7px;
+      font-size: .88rem;
+      outline: none;
+      background: #f8fafc;
+      cursor: pointer;
+    }
+
+    /* ── Table ── */
+    .table-wrap {
+      overflow-x: auto;
+      border-radius: var(--radius);
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: .86rem;
+      min-width: 1220px;
+    }
+    thead th {
+      background: #f1f5f9;
+      padding: 12px 14px;
+      text-align: left;
+      font-weight: 600;
+      color: var(--muted);
+      border-bottom: 2px solid var(--border);
+      white-space: nowrap;
+      cursor: pointer;
+      user-select: none;
+    }
+    thead th:hover { color: var(--primary); }
+    thead th .sort-icon { font-size: .7rem; margin-left: 4px; }
+    tbody tr { border-bottom: 1px solid var(--border); transition: background .12s; }
+    tbody tr:hover { background: #f8fafc; }
+    tbody td { padding: 11px 14px; vertical-align: middle; }
+    tbody td:first-child { font-weight: 500; }
+
+    /* ── Status Badge ── */
+    .badge {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: .75rem;
+      font-weight: 600;
+    }
+    .badge-paid   { background: #dcfce7; color: #16a34a; }
+    .badge-unpaid { background: #fee2e2; color: #dc2626; }
+    .badge-partial{ background: #fef9c3; color: #ca8a04; }
+    .badge-role-super { background: #fef3c7; color: #92400e; padding: 2px 8px; border-radius: 10px; font-size: .72rem; font-weight: 700; }
+    .badge-role-admin { background: #d1fae5; color: #065f46; padding: 2px 8px; border-radius: 10px; font-size: .72rem; font-weight: 700; }
+
+    /* ── Empty State ── */
+    .empty {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--muted);
+    }
+    .empty svg { width: 64px; opacity: .35; margin-bottom: 12px; }
+    .empty p { font-size: .95rem; }
+
+    /* ── Modal ── */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.45);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-overlay.show { display: flex; }
+    .modal {
+      background: #fff;
+      border-radius: 12px;
+      padding: 28px;
+      width: 90%;
+      max-width: 640px;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 20px 60px rgba(0,0,0,.2);
+      animation: slideUp .2s ease;
+    }
+    .modal.modal-wide { max-width: 800px; }
+    @keyframes slideUp {
+      from { transform: translateY(20px); opacity: 0; }
+      to   { transform: translateY(0);    opacity: 1; }
+    }
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+    .modal-title { font-size: 1.05rem; font-weight: 700; }
+    .modal-close {
+      width: 30px; height: 30px;
+      border: none; background: var(--bg);
+      border-radius: 50%; cursor: pointer;
+      font-size: 1.1rem; color: var(--muted);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .modal-close:hover { background: var(--border); }
+
+    /* ── Config Panel ── */
+    .config-tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 20px;
+      border-bottom: 2px solid var(--border);
+      padding-bottom: 0;
+      flex-wrap: wrap;
+    }
+    .config-tab {
+      padding: 8px 18px;
+      border: none;
+      background: none;
+      font-size: .9rem;
+      font-weight: 600;
+      color: var(--muted);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -2px;
+      transition: color .15s, border-color .15s;
+    }
+    .config-tab.active { color: var(--primary); border-bottom-color: var(--primary); }
+    .config-tab:hover  { color: var(--primary); }
+
+    .config-panel { display: none; }
+    .config-panel.active { display: block; }
+
+    .config-add-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+    .config-add-row input {
+      flex: 1;
+      padding: 8px 12px;
+      border: 1.5px solid var(--border);
+      border-radius: 7px;
+      font-size: .9rem;
+      outline: none;
+      background: #f8fafc;
+      transition: border-color .2s;
+    }
+    .config-add-row input:focus {
+      border-color: var(--primary);
+      background: #fff;
+    }
+
+    .config-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-height: 320px;
+      overflow-y: auto;
+    }
+    .config-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 9px 14px;
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      font-size: .9rem;
+      gap: 10px;
+    }
+    .config-item span { flex: 1; word-break: break-all; }
+    .config-item-actions { display: flex; gap: 6px; flex-shrink: 0; }
+    .config-item.editing { background: #eff6ff; border-color: var(--primary); }
+    .config-item.editing input {
+      flex: 1;
+      padding: 5px 10px;
+      border: 1.5px solid var(--primary);
+      border-radius: 6px;
+      font-size: .9rem;
+      outline: none;
+      background: #fff;
+    }
+    .config-empty {
+      text-align: center;
+      padding: 30px 0;
+      color: var(--muted);
+      font-size: .88rem;
+    }
+
+    /* ── User Management ── */
+    .user-list { display: flex; flex-direction: column; gap: 10px; max-height: 380px; overflow-y: auto; }
+    .user-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+    }
+    .user-item .u-avatar {
+      width: 34px; height: 34px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: .85rem; font-weight: 700; flex-shrink: 0;
+    }
+    .user-item .u-info { flex: 1; min-width: 0; }
+    .user-item .u-name { font-weight: 600; font-size: .9rem; }
+    .user-item .u-meta { font-size: .75rem; color: var(--muted); margin-top: 2px; }
+    .user-item .u-actions { display: flex; gap: 6px; flex-shrink: 0; }
+    .user-item.self-item { border-color: var(--primary); background: #eff6ff; }
+
+    .add-user-form {
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+    .add-user-form .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr auto;
+      gap: 10px;
+      align-items: end;
+    }
+    .add-user-form input,
+    .add-user-form select {
+      padding: 8px 10px;
+      border: 1.5px solid var(--border);
+      border-radius: 7px;
+      font-size: .88rem;
+      outline: none;
+      background: #fff;
+    }
+    .add-user-form input:focus,
+    .add-user-form select:focus { border-color: var(--primary); }
+    .add-user-form label { font-size: .78rem; color: var(--muted); display: block; margin-bottom: 4px; }
+
+    /* ── Toast ── */
+    #toast {
+      position: fixed;
+      bottom: 30px;
+      right: 24px;
+      background: #1e293b;
+      color: #fff;
+      padding: 12px 20px;
+      border-radius: 8px;
+      font-size: .88rem;
+      font-weight: 500;
+      opacity: 0;
+      transform: translateY(12px);
+      transition: opacity .3s, transform .3s;
+      z-index: 9999;
+      pointer-events: none;
+    }
+    #toast.show { opacity: 1; transform: translateY(0); }
+
+    /* ── Pagination ── */
+    .pagination {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 16px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .pagination span { font-size: .84rem; color: var(--muted); }
+    .page-btns { display: flex; gap: 6px; }
+    .page-btn {
+      min-width: 32px; height: 32px;
+      border: 1.5px solid var(--border);
+      background: #fff;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: .84rem;
+      font-weight: 600;
+      color: var(--text);
+      transition: all .15s;
+    }
+    .page-btn:hover { border-color: var(--primary); color: var(--primary); }
+    .page-btn.active { background: var(--primary); border-color: var(--primary); color: #fff; }
+
+    /* ── Own record highlight ── */
+    tr.own-row td:last-child::before {
+      content: '';
+    }
+    .own-dot {
+      display: inline-block;
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: var(--primary);
+      margin-right: 5px;
+      vertical-align: middle;
+    }
+
+    @media (max-width: 600px) {
+      header { flex-direction: column; align-items: flex-start; gap: 8px; }
+      .form-grid { grid-template-columns: 1fr 1fr; }
+      .add-user-form .form-row { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════════════════════
+     LOGIN PAGE
+══════════════════════════════ -->
+<div id="login-page">
+  <div class="login-box">
+    <div class="login-logo">
+      <span class="icon">🚗</span>
+      <h2>行程费用记录系统</h2>
+      <p>请登录以继续使用</p>
+    </div>
+    <div class="login-field">
+      <label>用户名</label>
+      <input type="text" id="login-username" placeholder="请输入用户名"
+        onkeydown="if(event.key==='Enter')doLogin()" autocomplete="username" />
+    </div>
+    <div class="login-field">
+      <label>密码</label>
+      <input type="password" id="login-password" placeholder="请输入密码"
+        onkeydown="if(event.key==='Enter')doLogin()" autocomplete="current-password" />
+    </div>
+    <button class="login-btn" onclick="doLogin()">登 录</button>
+    <div class="login-error" id="login-error"></div>
+    <div style="text-align:center;margin-top:14px">
+      <a onclick="resetAdminPwd()" style="font-size:.78rem;color:var(--muted);cursor:pointer;text-decoration:underline">忘记密码？重置超级管理员密码</a>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════
+     GUEST PAGE
+══════════════════════════════ -->
+<div id="guest-page">
+  <div class="guest-box">
+    <span class="icon">🔒</span>
+    <h2>访问受限</h2>
+    <p>您以游客身份访问，<br/>无权查看或操作此系统内容。<br/>请联系管理员获取账号。</p>
+    <button onclick="showLoginPage()">返回登录</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════
+     APP PAGE
+══════════════════════════════ -->
+<div id="app-page">
+
+<header>
+  <h1>🚗 行程费用记录系统</h1>
+  <div class="header-right">
+    <span class="date-text" id="current-date"></span>
+    <!-- 超级管理员专属 -->
+    <button class="btn-config" id="btn-user-mgr" onclick="openUserMgr()" style="display:none">👥 账号管理</button>
+    <button class="btn-config" id="btn-config"   onclick="openConfig()">⚙ 选项配置</button>
+    <div class="user-badge">
+      <div class="avatar" id="user-avatar"></div>
+      <span id="user-display-name"></span>
+      <span class="role-tag" id="user-role-tag"></span>
+    </div>
+    <button class="btn-logout" onclick="doLogout()">退出</button>
+  </div>
+</header>
+
+<main>
+  <!-- Stats Filter Bar -->
+  <div class="stats-filter">
+    <label>费用总览时间段：</label>
+    <input type="date" id="stats-from" onchange="updateStats()" />
+    <span class="sep">至</span>
+    <input type="date" id="stats-to" onchange="updateStats()" />
+    <div class="quick-btns">
+      <button class="quick-btn" id="qbtn-today"   onclick="setStatsRange('today')">今天</button>
+      <button class="quick-btn" id="qbtn-week"    onclick="setStatsRange('week')">本周</button>
+      <button class="quick-btn" id="qbtn-month"   onclick="setStatsRange('month')">本月</button>
+      <button class="quick-btn" id="qbtn-quarter" onclick="setStatsRange('quarter')">本季度</button>
+      <button class="quick-btn" id="qbtn-year"    onclick="setStatsRange('year')">本年</button>
+    </div>
+    <button class="reset-btn" onclick="setStatsRange('all')">全部</button>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats">
+    <div class="stat-card">
+      <div class="label">总记录数</div>
+      <div class="value" id="stat-total">0</div>
+    </div>
+    <div class="stat-card green">
+      <div class="label">总金额（元）</div>
+      <div class="value" id="stat-amount">0.00</div>
+    </div>
+    <div class="stat-card orange">
+      <div class="label">已收款</div>
+      <div class="value" id="stat-paid">0.00</div>
+    </div>
+    <div class="stat-card red">
+      <div class="label">未收款</div>
+      <div class="value" id="stat-unpaid">0.00</div>
+    </div>
+  </div>
+
+  <!-- Add Form -->
+  <div class="card" id="add-form-card">
+    <div class="card-title"><div class="dot"></div>新增行程记录</div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>日期 *</label>
+        <input type="date" id="f-date" />
+      </div>
+      <div class="form-group">
+        <label>车牌号 *</label>
+        <select id="f-plate">
+          <option value="">— 请选择车牌号 —</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>出发地 *</label>
+        <input type="text" id="f-origin" placeholder="如：深圳北站" />
+      </div>
+      <div class="form-group">
+        <label>途经地</label>
+        <input type="text" id="f-via" placeholder="如：福田（可选）" />
+      </div>
+      <div class="form-group">
+        <label>目的地 *</label>
+        <input type="text" id="f-dest" placeholder="如：福田口岸" />
+      </div>
+      <div class="form-group">
+        <label>金额（元）*</label>
+        <input type="number" id="f-amount" placeholder="0.00" min="0" step="0.01" />
+      </div>
+      <div class="form-group">
+        <label>司机</label>
+        <select id="f-driver">
+          <option value="">— 请选择司机 —</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>付款人</label>
+        <input type="text" id="f-payer" placeholder="付款人姓名" />
+      </div>
+      <div class="form-group">
+        <label>收款人</label>
+        <select id="f-receiver">
+          <option value="">— 请选择收款人 —</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>收款情况</label>
+        <select id="f-status">
+          <option value="已收款">已收款</option>
+          <option value="未收款">未收款</option>
+          <option value="部分收款">部分收款</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>备注</label>
+        <input type="text" id="f-note" placeholder="可选备注" />
+      </div>
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-primary" onclick="addRecord()">＋ 添加记录</button>
+      <button class="btn btn-outline" onclick="clearForm()">清空</button>
+    </div>
+  </div>
+
+  <!-- Table Card -->
+  <div class="card">
+    <div class="card-title"><div class="dot" style="background:var(--success)"></div>记录列表</div>
+
+    <!-- Toolbar -->
+    <div class="toolbar">
+      <input type="text" id="search-input" placeholder="搜索车牌、行程、司机、付款人…" oninput="applyFilter()" />
+      <select id="filter-status" onchange="applyFilter()">
+        <option value="">全部收款情况</option>
+        <option value="已收款">已收款</option>
+        <option value="未收款">未收款</option>
+        <option value="部分收款">部分收款</option>
+      </select>
+      <input type="date" id="filter-date-from" title="开始日期" onchange="applyFilter()" />
+      <span style="font-size:.82rem;color:var(--muted)">至</span>
+      <input type="date" id="filter-date-to" title="结束日期" onchange="applyFilter()" />
+      <button class="btn btn-success btn-sm" onclick="exportCSV()">⬇ 导出 CSV</button>
+      <button class="btn btn-danger btn-sm" id="btn-clear-all" onclick="clearAll()">🗑 清空全部</button>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th onclick="sortBy('date')">日期 <span class="sort-icon">⇅</span></th>
+            <th onclick="sortBy('plate')">车牌 <span class="sort-icon">⇅</span></th>
+            <th onclick="sortBy('origin')">出发地 <span class="sort-icon">⇅</span></th>
+            <th onclick="sortBy('via')">途经地 <span class="sort-icon">⇅</span></th>
+            <th onclick="sortBy('dest')">目的地 <span class="sort-icon">⇅</span></th>
+            <th onclick="sortBy('amount')">金额 <span class="sort-icon">⇅</span></th>
+            <th onclick="sortBy('driver')">司机 <span class="sort-icon">⇅</span></th>
+            <th onclick="sortBy('payer')">付款人 <span class="sort-icon">⇅</span></th>
+            <th onclick="sortBy('receiver')">收款人 <span class="sort-icon">⇅</span></th>
+            <th onclick="sortBy('status')">收款情况 <span class="sort-icon">⇅</span></th>
+            <th onclick="sortBy('createdBy')">添加人 <span class="sort-icon">⇅</span></th>
+            <th>备注</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody id="table-body"></tbody>
+      </table>
+    </div>
+
+    <!-- Empty state -->
+    <div class="empty" id="empty-state" style="display:none;">
+      <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="8" y="16" width="48" height="36" rx="4" stroke="#94a3b8" stroke-width="3"/>
+        <path d="M8 24h48" stroke="#94a3b8" stroke-width="3"/>
+        <path d="M20 36h24M20 44h16" stroke="#94a3b8" stroke-width="2.5" stroke-linecap="round"/>
+      </svg>
+      <p>暂无记录，请添加行程信息</p>
+    </div>
+
+    <div class="pagination">
+      <span id="pagination-info"></span>
+      <div class="page-btns" id="page-btns"></div>
+    </div>
+  </div>
+</main>
+
+</div><!-- /#app-page -->
+
+<!-- ══════════════════════════════
+     MODALS
+══════════════════════════════ -->
+
+<!-- Confirm Modal -->
+<div class="modal-overlay" id="confirm-modal">
+  <div class="modal" style="max-width:380px">
+    <div class="modal-header">
+      <div class="modal-title" id="confirm-title">确认操作</div>
+    </div>
+    <p id="confirm-msg" style="padding:8px 0 20px;color:var(--text);line-height:1.6;"></p>
+    <div style="display:flex;gap:10px;justify-content:flex-end">
+      <button class="btn btn-outline" onclick="closeConfirm()">取消</button>
+      <button class="btn btn-danger"  id="confirm-ok-btn">确认删除</button>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Modal -->
+<div class="modal-overlay" id="edit-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">编辑记录</div>
+      <button class="modal-close" onclick="closeEditModal()">✕</button>
+    </div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>日期 *</label>
+        <input type="date" id="e-date" />
+      </div>
+      <div class="form-group">
+        <label>车牌号 *</label>
+        <select id="e-plate">
+          <option value="">— 请选择车牌号 —</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>出发地 *</label>
+        <input type="text" id="e-origin" placeholder="如：深圳北站" />
+      </div>
+      <div class="form-group">
+        <label>途经地</label>
+        <input type="text" id="e-via" placeholder="如：福田（可选）" />
+      </div>
+      <div class="form-group">
+        <label>目的地 *</label>
+        <input type="text" id="e-dest" placeholder="如：福田口岸" />
+      </div>
+      <div class="form-group">
+        <label>金额（元）*</label>
+        <input type="number" id="e-amount" placeholder="0.00" min="0" step="0.01" />
+      </div>
+      <div class="form-group">
+        <label>司机</label>
+        <select id="e-driver">
+          <option value="">— 请选择司机 —</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>付款人</label>
+        <input type="text" id="e-payer" />
+      </div>
+      <div class="form-group">
+        <label>收款人</label>
+        <select id="e-receiver">
+          <option value="">— 请选择收款人 —</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>收款情况</label>
+        <select id="e-status">
+          <option value="已收款">已收款</option>
+          <option value="未收款">未收款</option>
+          <option value="部分收款">部分收款</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>备注</label>
+        <input type="text" id="e-note" />
+      </div>
+    </div>
+    <div class="form-actions" style="margin-top:20px;">
+      <button class="btn btn-primary" onclick="saveEdit()">保存修改</button>
+      <button class="btn btn-outline" onclick="closeEditModal()">取消</button>
+    </div>
+  </div>
+</div>
+
+<!-- Config Modal -->
+<div class="modal-overlay" id="config-modal">
+  <div class="modal modal-wide">
+    <div class="modal-header">
+      <div class="modal-title">⚙ 选项配置</div>
+      <button class="modal-close" onclick="closeConfig()">✕</button>
+    </div>
+
+    <div class="config-tabs">
+      <button class="config-tab active" onclick="switchTab('plates')">🚗 车牌号</button>
+      <button class="config-tab" onclick="switchTab('drivers')">👤 司机</button>
+      <button class="config-tab" onclick="switchTab('receivers')">💰 收款人</button>
+    </div>
+
+    <!-- 车牌号 -->
+    <div class="config-panel active" id="panel-plates">
+      <div class="config-add-row">
+        <input type="text" id="input-plate" placeholder="输入车牌号，如：粤A12345" onkeydown="if(event.key==='Enter')addConfigItem('plates')" />
+        <button class="btn btn-primary btn-sm" onclick="addConfigItem('plates')">＋ 添加</button>
+      </div>
+      <div class="config-list" id="list-plates"></div>
+    </div>
+
+    <!-- 司机 -->
+    <div class="config-panel" id="panel-drivers">
+      <div class="config-add-row">
+        <input type="text" id="input-driver" placeholder="输入司机姓名" onkeydown="if(event.key==='Enter')addConfigItem('drivers')" />
+        <button class="btn btn-primary btn-sm" onclick="addConfigItem('drivers')">＋ 添加</button>
+      </div>
+      <div class="config-list" id="list-drivers"></div>
+    </div>
+
+    <!-- 收款人 -->
+    <div class="config-panel" id="panel-receivers">
+      <div class="config-add-row">
+        <input type="text" id="input-receiver" placeholder="输入收款人姓名" onkeydown="if(event.key==='Enter')addConfigItem('receivers')" />
+        <button class="btn btn-primary btn-sm" onclick="addConfigItem('receivers')">＋ 添加</button>
+      </div>
+      <div class="config-list" id="list-receivers"></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- User Management Modal (超级管理员专属) -->
+<div class="modal-overlay" id="user-mgr-modal">
+  <div class="modal modal-wide">
+    <div class="modal-header">
+      <div class="modal-title">👥 账号管理</div>
+      <button class="modal-close" onclick="closeUserMgr()">✕</button>
+    </div>
+
+    <!-- 新增用户表单 -->
+    <div class="add-user-form">
+      <div style="font-size:.85rem;font-weight:600;margin-bottom:12px;color:var(--text)">新增账号</div>
+      <div class="form-row">
+        <div>
+          <label>用户名</label>
+          <input type="text" id="new-username" placeholder="登录用户名" />
+        </div>
+        <div>
+          <label>密码</label>
+          <input type="password" id="new-password" placeholder="登录密码" />
+        </div>
+        <div>
+          <label>角色</label>
+          <select id="new-role">
+            <option value="admin">普通管理员</option>
+            <option value="super">超级管理员</option>
+          </select>
+        </div>
+        <div>
+          <label>&nbsp;</label>
+          <button class="btn btn-primary btn-sm" onclick="addUser()" style="width:100%">＋ 添加</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 用户列表 -->
+    <div class="user-list" id="user-list"></div>
+
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<script>
+  // ══════════════════════════════════════
+  //  STORAGE KEYS
+  // ══════════════════════════════════════
+  const STORAGE_KEY  = 'trip_records_v1';
+  const CONFIG_KEY   = 'trip_config_v1';
+  const USERS_KEY    = 'trip_users_v1';
+  const SESSION_KEY  = 'trip_session_v1';
+  const PAGE_SIZE    = 15;
+
+  // ══════════════════════════════════════
+  //  DEFAULT SUPER ADMIN (初始内置账号)
+  // ══════════════════════════════════════
+  function initUsers() {
+    let users = JSON.parse(localStorage.getItem(USERS_KEY) || 'null');
+    if (!users) {
+      users = [
+        { id: 1, username: 'admin', password: 'admin123', role: 'super', displayName: '超级管理员', createdAt: Date.now() }
+      ];
+      localStorage.setItem(USERS_KEY, JSON.stringify(users));
+    } else {
+      // 确保 admin 账号始终存在且密码正确（防止数据损坏）
+      const adminIdx = users.findIndex(u => u.username === 'admin' && u.role === 'super');
+      if (adminIdx < 0) {
+        users.unshift({ id: 1, username: 'admin', password: 'admin123', role: 'super', displayName: '超级管理员', createdAt: Date.now() });
+        localStorage.setItem(USERS_KEY, JSON.stringify(users));
+      }
+    }
+    return users;
+  }
+
+  // ══════════════════════════════════════
+  //  AUTH STATE
+  // ══════════════════════════════════════
+  let currentUser = JSON.parse(sessionStorage.getItem(SESSION_KEY) || 'null');
+  // role: 'super' | 'admin' | 'guest'
+
+  function isSuper() { return currentUser && currentUser.role === 'super'; }
+  function isAdmin() { return currentUser && (currentUser.role === 'admin' || currentUser.role === 'super'); }
+
+  // ══════════════════════════════════════
+  //  PAGE ROUTING
+  // ══════════════════════════════════════
+  function showLoginPage() {
+    document.getElementById('login-page').classList.add('show');
+    document.getElementById('guest-page').classList.remove('show');
+    document.getElementById('app-page').classList.remove('show');
+    document.getElementById('login-error').textContent = '';
+    document.getElementById('login-username').value = '';
+    document.getElementById('login-password').value = '';
+  }
+
+  function showGuestPage() {
+    document.getElementById('login-page').classList.remove('show');
+    document.getElementById('guest-page').classList.add('show');
+    document.getElementById('app-page').classList.remove('show');
+  }
+
+  function showAppPage() {
+    document.getElementById('login-page').classList.remove('show');
+    document.getElementById('guest-page').classList.remove('show');
+    document.getElementById('app-page').classList.add('show');
+    initApp();
+  }
+
+  function routeByRole() {
+    if (!currentUser) { showLoginPage(); return; }
+    if (currentUser.role === 'guest') { showGuestPage(); return; }
+    showAppPage();
+  }
+
+  // ══════════════════════════════════════
+  //  LOGIN / LOGOUT
+  // ══════════════════════════════════════
+  function doLogin() {
+    const username = document.getElementById('login-username').value.trim();
+    const password = document.getElementById('login-password').value;
+    const errEl    = document.getElementById('login-error');
+
+    if (!username || !password) {
+      errEl.textContent = '请输入用户名和密码';
+      return;
+    }
+
+    const users = initUsers();
+    const user  = users.find(u => u.username === username && u.password === password);
+
+    if (!user) {
+      errEl.textContent = '用户名或密码错误';
+      document.getElementById('login-password').value = '';
+      return;
+    }
+
+    currentUser = { id: user.id, username: user.username, role: user.role, displayName: user.displayName || user.username };
+    sessionStorage.setItem(SESSION_KEY, JSON.stringify(currentUser));
+    routeByRole();
+  }
+
+  function doLogout() {
+    currentUser = null;
+    sessionStorage.removeItem(SESSION_KEY);
+    showLoginPage();
+  }
+
+  function resetAdminPwd() {
+    localStorage.removeItem(USERS_KEY);
+    document.getElementById('login-error').style.color = '#16a34a';
+    document.getElementById('login-error').textContent = '已重置！用户名 admin，密码 admin123';
+    document.getElementById('login-username').value = 'admin';
+    document.getElementById('login-password').value = 'admin123';
+  }
+
+  // ══════════════════════════════════════
+  //  APP INIT
+  // ══════════════════════════════════════
+  let records = [];
+  let config  = { plates: [], drivers: [], receivers: [] };
+  let filtered = [];
+  let currentPage = 1;
+  let sortKey = 'date';
+  let sortAsc = false;
+  let editingId = null;
+  const today = new Date().toISOString().slice(0, 10);
+
+  function initApp() {
+    // 加载数据
+    records = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+    config  = JSON.parse(localStorage.getItem(CONFIG_KEY)  || JSON.stringify({ plates: [], drivers: [], receivers: [] }));
+
+    // 更新 header 用户信息
+    const roleName = isSuper() ? '超级管理员' : '普通管理员';
+    const avatarCls = isSuper() ? 'avatar-super' : 'avatar-admin';
+    const av = document.getElementById('user-avatar');
+    av.textContent = currentUser.displayName.slice(0, 1).toUpperCase();
+    av.className   = 'avatar ' + avatarCls;
+    document.getElementById('user-display-name').textContent = currentUser.displayName;
+    document.getElementById('user-role-tag').textContent     = roleName;
+
+    // 超级管理员专属按钮
+    document.getElementById('btn-user-mgr').style.display = isSuper() ? '' : 'none';
+
+    // 「清空全部」仅超级管理员可见
+    document.getElementById('btn-clear-all').style.display = isSuper() ? '' : 'none';
+
+    // 日期默认值
+    document.getElementById('f-date').value = today;
+    document.getElementById('current-date').textContent =
+      new Date().toLocaleDateString('zh-CN', { year:'numeric', month:'long', day:'numeric', weekday:'long' });
+
+    refreshSelects();
+    applyFilter();
+  }
+
+  // ══════════════════════════════════════
+  //  SAVE
+  // ══════════════════════════════════════
+  function save()       { localStorage.setItem(STORAGE_KEY, JSON.stringify(records)); }
+  function saveConfig() { localStorage.setItem(CONFIG_KEY,  JSON.stringify(config));  }
+
+  // ══════════════════════════════════════
+  //  SELECTS
+  // ══════════════════════════════════════
+  function refreshSelects() {
+    const ids = {
+      plates:    ['f-plate',    'e-plate'],
+      drivers:   ['f-driver',   'e-driver'],
+      receivers: ['f-receiver', 'e-receiver'],
+    };
+    const labels = { plates: '车牌号', drivers: '司机', receivers: '收款人' };
+    Object.entries(ids).forEach(([key, elIds]) => {
+      elIds.forEach(id => {
+        const sel = document.getElementById(id);
+        if (!sel) return;
+        const cur = sel.value;
+        sel.innerHTML = `<option value="">— 请选择${labels[key]} —</option>` +
+          config[key].map(vv => `<option value="${esc(vv)}">${esc(vv)}</option>`).join('');
+        if (config[key].includes(cur)) sel.value = cur;
+      });
+    });
+  }
+
+  // ══════════════════════════════════════
+  //  ADD RECORD
+  // ══════════════════════════════════════
+  function addRecord() {
+    const date     = v('f-date');
+    const plate    = v('f-plate');
+    const origin   = v('f-origin').trim();
+    const via      = v('f-via').trim();
+    const dest     = v('f-dest').trim();
+    const amount   = parseFloat(v('f-amount'));
+    const driver   = v('f-driver');
+    const payer    = v('f-payer').trim();
+    const receiver = v('f-receiver');
+    const status   = v('f-status');
+    const note     = v('f-note').trim();
+
+    if (!date || !plate || !origin || !dest || isNaN(amount)) {
+      showToast('请填写必填项：日期、车牌、出发地、目的地、金额', 'warn');
+      return;
+    }
+
+    records.unshift({
+      id: Date.now(),
+      date, plate, origin, via, dest,
+      amount: amount.toFixed(2),
+      driver, payer, receiver, status, note,
+      createdBy: currentUser.username   // 记录创建人
+    });
+    save();
+    clearForm();
+    applyFilter();
+    showToast('记录已添加 ✓');
+  }
+
+  // ══════════════════════════════════════
+  //  DELETE RECORD
+  // ══════════════════════════════════════
+  function deleteRecord(id) {
+    const r = records.find(r => r.id === id);
+    if (!r) return;
+
+    // 普通管理员只能删自己的
+    if (!isSuper() && r.createdBy !== currentUser.username) {
+      showToast('您只能删除自己录入的记录', 'warn');
+      return;
+    }
+
+    showConfirm('确认删除这条记录？', () => {
+      records = records.filter(r => r.id !== id);
+      save();
+      applyFilter();
+      showToast('已删除');
+    }, '删除记录');
+  }
+
+  // ══════════════════════════════════════
+  //  EDIT RECORD
+  // ══════════════════════════════════════
+  function openEdit(id) {
+    const r = records.find(r => r.id === id);
+    if (!r) return;
+
+    // 普通管理员只能编辑自己的
+    if (!isSuper() && r.createdBy !== currentUser.username) {
+      showToast('您只能编辑自己录入的记录', 'warn');
+      return;
+    }
+
+    editingId = id;
+    document.getElementById('e-date').value     = r.date;
+    document.getElementById('e-plate').value    = r.plate    || '';
+    document.getElementById('e-origin').value   = r.origin   || '';
+    document.getElementById('e-via').value      = r.via      || '';
+    document.getElementById('e-dest').value     = r.dest     || '';
+    document.getElementById('e-amount').value   = r.amount;
+    document.getElementById('e-driver').value   = r.driver   || '';
+    document.getElementById('e-payer').value    = r.payer    || '';
+    document.getElementById('e-receiver').value = r.receiver || '';
+    document.getElementById('e-status').value   = r.status;
+    document.getElementById('e-note').value     = r.note     || '';
+    document.getElementById('edit-modal').classList.add('show');
+  }
+
+  function saveEdit() {
+    const date     = document.getElementById('e-date').value;
+    const plate    = document.getElementById('e-plate').value;
+    const origin   = document.getElementById('e-origin').value.trim();
+    const via      = document.getElementById('e-via').value.trim();
+    const dest     = document.getElementById('e-dest').value.trim();
+    const amount   = parseFloat(document.getElementById('e-amount').value);
+    const driver   = document.getElementById('e-driver').value;
+    const payer    = document.getElementById('e-payer').value.trim();
+    const receiver = document.getElementById('e-receiver').value;
+    const status   = document.getElementById('e-status').value;
+    const note     = document.getElementById('e-note').value.trim();
+
+    if (!date || !plate || !origin || !dest || isNaN(amount)) {
+      showToast('请填写必填项：日期、车牌、出发地、目的地、金额', 'warn');
+      return;
+    }
+    const idx = records.findIndex(r => r.id === editingId);
+    if (idx >= 0) {
+      records[idx] = { ...records[idx], date, plate, origin, via, dest, amount: amount.toFixed(2), driver, payer, receiver, status, note };
+      save();
+      applyFilter();
+      showToast('修改已保存 ✓');
+    }
+    closeEditModal();
+  }
+
+  function closeEditModal() {
+    document.getElementById('edit-modal').classList.remove('show');
+    editingId = null;
+  }
+
+  // ══════════════════════════════════════
+  //  CONFIG MODAL
+  // ══════════════════════════════════════
+  function openConfig() {
+    renderConfigLists();
+    document.getElementById('config-modal').classList.add('show');
+  }
+  function closeConfig() {
+    document.getElementById('config-modal').classList.remove('show');
+  }
+
+  let activeTab = 'plates';
+  function switchTab(tab) {
+    activeTab = tab;
+    document.querySelectorAll('.config-tab').forEach((btn, i) => {
+      btn.classList.toggle('active', ['plates','drivers','receivers'][i] === tab);
+    });
+    document.querySelectorAll('.config-panel').forEach(p => p.classList.remove('active'));
+    document.getElementById('panel-' + tab).classList.add('active');
+  }
+
+  function renderConfigLists() {
+    ['plates','drivers','receivers'].forEach(key => {
+      const list = document.getElementById('list-' + key);
+      if (config[key].length === 0) {
+        list.innerHTML = `<div class="config-empty">暂无选项，请添加</div>`;
+        return;
+      }
+      list.innerHTML = config[key].map((item, i) => `
+        <div class="config-item" id="ci-${key}-${i}">
+          <span>${esc(item)}</span>
+          <div class="config-item-actions">
+            <button class="btn btn-warning btn-sm" onclick="startEditConfigItem('${key}', ${i})">编辑</button>
+            <button class="btn btn-danger  btn-sm" onclick="removeConfigItem('${key}', ${i})">删除</button>
+          </div>
+        </div>
+      `).join('');
+    });
+  }
+
+  const inputMap = { plates: 'input-plate', drivers: 'input-driver', receivers: 'input-receiver' };
+
+  function addConfigItem(key) {
+    const input = document.getElementById(inputMap[key]);
+    const val   = input.value.trim();
+    if (!val) { showToast('请输入内容', 'warn'); return; }
+    if (config[key].includes(val)) { showToast('该选项已存在', 'warn'); return; }
+    config[key].push(val);
+    saveConfig();
+    input.value = '';
+    renderConfigLists();
+    refreshSelects();
+    showToast('已添加 ✓');
+  }
+
+  function startEditConfigItem(key, idx) {
+    const el  = document.getElementById(`ci-${key}-${idx}`);
+    const val = config[key][idx];
+    el.classList.add('editing');
+    el.innerHTML = `
+      <input type="text" id="edit-input-${key}-${idx}" value="${esc(val)}"
+        onkeydown="if(event.key==='Enter')saveEditConfigItem('${key}',${idx});if(event.key==='Escape')cancelEditConfigItem('${key}',${idx})" />
+      <div class="config-item-actions">
+        <button class="btn btn-primary btn-sm" onclick="saveEditConfigItem('${key}', ${idx})">保存</button>
+        <button class="btn btn-outline  btn-sm" onclick="cancelEditConfigItem('${key}', ${idx})">取消</button>
+      </div>`;
+    document.getElementById(`edit-input-${key}-${idx}`).focus();
+  }
+
+  function saveEditConfigItem(key, idx) {
+    const input = document.getElementById(`edit-input-${key}-${idx}`);
+    const val   = input.value.trim();
+    if (!val) { showToast('请输入内容', 'warn'); input.focus(); return; }
+    if (config[key].includes(val) && config[key][idx] !== val) {
+      showToast('该选项已存在', 'warn'); input.focus(); return;
+    }
+    config[key][idx] = val;
+    saveConfig();
+    renderConfigLists();
+    refreshSelects();
+    showToast('已修改 ✓');
+  }
+
+  function cancelEditConfigItem(key, idx) { renderConfigLists(); }
+
+  function removeConfigItem(key, idx) {
+    showConfirm(`确认删除「${config[key][idx]}」？`, () => {
+      config[key].splice(idx, 1);
+      saveConfig();
+      renderConfigLists();
+      refreshSelects();
+      showToast('已删除');
+    }, '删除选项');
+  }
+
+  // ══════════════════════════════════════
+  //  USER MANAGEMENT (超级管理员)
+  // ══════════════════════════════════════
+  function openUserMgr() {
+    if (!isSuper()) { showToast('无权限', 'warn'); return; }
+    renderUserList();
+    document.getElementById('user-mgr-modal').classList.add('show');
+  }
+  function closeUserMgr() {
+    document.getElementById('user-mgr-modal').classList.remove('show');
+  }
+
+  function renderUserList() {
+    const users = initUsers();
+    const list  = document.getElementById('user-list');
+    if (users.length === 0) {
+      list.innerHTML = '<div class="config-empty">暂无账号</div>';
+      return;
+    }
+    list.innerHTML = users.map(u => {
+      const isSelf    = u.id === currentUser.id;
+      const roleName  = u.role === 'super' ? '超级管理员' : u.role === 'admin' ? '普通管理员' : '游客';
+      const roleBadge = u.role === 'super' ? 'badge-role-super' : 'badge-role-admin';
+      const avatarCls = u.role === 'super' ? 'avatar-super' : 'avatar-admin';
+      const initial   = (u.displayName || u.username).slice(0,1).toUpperCase();
+      return `
+        <div class="user-item ${isSelf ? 'self-item' : ''}">
+          <div class="u-avatar ${avatarCls}">${initial}</div>
+          <div class="u-info">
+            <div class="u-name">${esc(u.displayName || u.username)} ${isSelf ? '<span style="color:var(--primary);font-size:.72rem">（当前账号）</span>' : ''}</div>
+            <div class="u-meta">用户名：${esc(u.username)} &nbsp;|&nbsp; <span class="${roleBadge}">${roleName}</span></div>
+          </div>
+          <div class="u-actions">
+            <button class="btn btn-warning btn-sm" onclick="editUser(${u.id})">编辑</button>
+            ${isSelf ? '' : `<button class="btn btn-danger btn-sm" onclick="removeUser(${u.id})">删除</button>`}
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function addUser() {
+    const username    = document.getElementById('new-username').value.trim();
+    const password    = document.getElementById('new-password').value;
+    const role        = document.getElementById('new-role').value;
+
+    if (!username || !password) { showToast('请填写用户名和密码', 'warn'); return; }
+    const users = initUsers();
+    if (users.find(u => u.username === username)) { showToast('用户名已存在', 'warn'); return; }
+
+    users.push({
+      id: Date.now(),
+      username,
+      password,
+      role,
+      displayName: username,
+      createdAt: Date.now()
+    });
+    localStorage.setItem(USERS_KEY, JSON.stringify(users));
+    document.getElementById('new-username').value = '';
+    document.getElementById('new-password').value = '';
+    renderUserList();
+    showToast('账号已创建 ✓');
+  }
+
+  function removeUser(id) {
+    const users = initUsers();
+    const u = users.find(u => u.id === id);
+    if (!u) return;
+    if (u.id === currentUser.id) { showToast('不能删除当前登录账号', 'warn'); return; }
+    showConfirm(`确认删除账号「${u.displayName || u.username}」？`, () => {
+      const newUsers = users.filter(u => u.id !== id);
+      localStorage.setItem(USERS_KEY, JSON.stringify(newUsers));
+      renderUserList();
+      showToast('账号已删除');
+    }, '删除账号');
+  }
+
+  // 编辑用户（内联弹窗简化版）
+  function editUser(id) {
+    const users = initUsers();
+    const u     = users.find(u => u.id === id);
+    if (!u) return;
+
+    // 复用 confirm 弹窗区域做简单编辑，这里改为独立小弹窗
+    const overlay = document.getElementById('confirm-modal');
+    const titleEl = document.getElementById('confirm-title');
+    const msgEl   = document.getElementById('confirm-msg');
+    const okBtn   = document.getElementById('confirm-ok-btn');
+
+    titleEl.textContent = '编辑账号';
+    msgEl.innerHTML = `
+      <div style="display:flex;flex-direction:column;gap:12px;margin:4px 0 8px">
+        <div>
+          <div style="font-size:.8rem;color:var(--muted);margin-bottom:4px">显示名称</div>
+          <input id="eu-name" type="text" value="${esc(u.displayName || u.username)}" style="width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:7px;font-size:.9rem;outline:none" />
+        </div>
+        <div>
+          <div style="font-size:.8rem;color:var(--muted);margin-bottom:4px">新密码（留空则不修改）</div>
+          <input id="eu-pwd" type="password" placeholder="输入新密码" style="width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:7px;font-size:.9rem;outline:none" />
+        </div>
+        <div>
+          <div style="font-size:.8rem;color:var(--muted);margin-bottom:4px">角色</div>
+          <select id="eu-role" style="width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:7px;font-size:.9rem;outline:none">
+            <option value="super" ${u.role==='super'?'selected':''}>超级管理员</option>
+            <option value="admin" ${u.role==='admin'?'selected':''}>普通管理员</option>
+          </select>
+        </div>
+      </div>`;
+
+    okBtn.textContent = '保存修改';
+    okBtn.className   = 'btn btn-primary';
+    okBtn.onclick = function() {
+      const newName = document.getElementById('eu-name').value.trim();
+      const newPwd  = document.getElementById('eu-pwd').value;
+      const newRole = document.getElementById('eu-role').value;
+      if (!newName) { showToast('显示名称不能为空', 'warn'); return; }
+      const users2 = initUsers();
+      const idx = users2.findIndex(u => u.id === id);
+      if (idx >= 0) {
+        users2[idx].displayName = newName;
+        users2[idx].role        = newRole;
+        if (newPwd) users2[idx].password = newPwd;
+        localStorage.setItem(USERS_KEY, JSON.stringify(users2));
+        // 如果修改的是当前用户，同步 session
+        if (id === currentUser.id) {
+          currentUser.displayName = newName;
+          currentUser.role        = newRole;
+          sessionStorage.setItem(SESSION_KEY, JSON.stringify(currentUser));
+          document.getElementById('user-display-name').textContent = newName;
+          document.getElementById('user-role-tag').textContent = newRole === 'super' ? '超级管理员' : '普通管理员';
+        }
+      }
+      closeConfirm();
+      renderUserList();
+      showToast('已保存 ✓');
+    };
+
+    overlay.classList.add('show');
+  }
+
+  // ══════════════════════════════════════
+  //  SORT
+  // ══════════════════════════════════════
+  function sortBy(key) {
+    if (sortKey === key) sortAsc = !sortAsc;
+    else { sortKey = key; sortAsc = true; }
+    applyFilter();
+  }
+
+  // ══════════════════════════════════════
+  //  FILTER + RENDER
+  // ══════════════════════════════════════
+  function applyFilter() {
+    const q    = document.getElementById('search-input').value.toLowerCase();
+    const st   = document.getElementById('filter-status').value;
+    const from = document.getElementById('filter-date-from').value;
+    const to   = document.getElementById('filter-date-to').value;
+
+    filtered = records.filter(r => {
+      if (st   && r.status !== st)  return false;
+      if (from && r.date < from)    return false;
+      if (to   && r.date > to)      return false;
+      if (q) {
+        const hay = [r.plate, r.origin, r.via, r.dest, r.driver, r.payer, r.receiver, r.note].join(' ').toLowerCase();
+        if (!hay.includes(q)) return false;
+      }
+      return true;
+    });
+
+    filtered.sort((a, b) => {
+      let va = a[sortKey] ?? '';
+      let vb = b[sortKey] ?? '';
+      if (sortKey === 'amount') { va = parseFloat(va); vb = parseFloat(vb); }
+      if (va < vb) return sortAsc ? -1 : 1;
+      if (va > vb) return sortAsc ?  1 : -1;
+      return 0;
+    });
+
+    currentPage = 1;
+    renderTable();
+    updateStats();
+  }
+
+  function renderTable() {
+    const tbody = document.getElementById('table-body');
+    const empty = document.getElementById('empty-state');
+    const start = (currentPage - 1) * PAGE_SIZE;
+    const page  = filtered.slice(start, start + PAGE_SIZE);
+
+    if (filtered.length === 0) {
+      tbody.innerHTML = '';
+      empty.style.display = 'block';
+    } else {
+      empty.style.display = 'none';
+      tbody.innerHTML = page.map(r => {
+        const isOwn   = r.createdBy === currentUser.username;
+        const canEdit = isSuper() || isOwn;
+        const editBtn = canEdit
+          ? `<button class="btn btn-warning btn-sm" onclick="openEdit(${r.id})">编辑</button>`
+          : `<button class="btn btn-sm btn-outline" disabled style="opacity:.4;cursor:not-allowed">编辑</button>`;
+        const delBtn = canEdit
+          ? `<button class="btn btn-danger btn-sm" onclick="deleteRecord(${r.id})" style="margin-left:4px">删除</button>`
+          : `<button class="btn btn-sm btn-outline" disabled style="opacity:.4;cursor:not-allowed;margin-left:4px">删除</button>`;
+        const ownerDot = isOwn ? `<span class="own-dot" title="我录入的"></span>` : '';
+        return `
+          <tr class="${isOwn ? 'own-row' : ''}">
+            <td>${r.date}</td>
+            <td><strong>${esc(r.plate)}</strong></td>
+            <td>${esc(r.origin)}</td>
+            <td style="color:var(--muted);font-size:.82rem">${esc(r.via)}</td>
+            <td>${esc(r.dest)}</td>
+            <td style="font-weight:600;color:#1e40af">¥${parseFloat(r.amount).toFixed(2)}</td>
+            <td>${esc(r.driver)}</td>
+            <td>${esc(r.payer)}</td>
+            <td>${esc(r.receiver)}</td>
+            <td><span class="badge ${badgeClass(r.status)}">${esc(r.status)}</span></td>
+            <td style="color:var(--muted);font-size:.82rem">${esc(r.createdBy)}</td>
+            <td style="color:var(--muted);font-size:.82rem">${esc(r.note)}</td>
+            <td style="white-space:nowrap">${ownerDot}${editBtn}${delBtn}</td>
+          </tr>`;
+      }).join('');
+    }
+    renderPagination();
+  }
+
+  function renderPagination() {
+    const total = filtered.length;
+    const pages = Math.ceil(total / PAGE_SIZE);
+    const info  = document.getElementById('pagination-info');
+    const btns  = document.getElementById('page-btns');
+
+    if (total === 0) { info.textContent = ''; btns.innerHTML = ''; return; }
+    info.textContent = `共 ${total} 条记录，第 ${currentPage}/${pages} 页`;
+
+    let html = '';
+    if (currentPage > 1) html += `<button class="page-btn" onclick="goPage(${currentPage-1})">‹</button>`;
+    for (let i = Math.max(1, currentPage-2); i <= Math.min(pages, currentPage+2); i++) {
+      html += `<button class="page-btn ${i===currentPage?'active':''}" onclick="goPage(${i})">${i}</button>`;
+    }
+    if (currentPage < pages) html += `<button class="page-btn" onclick="goPage(${currentPage+1})">›</button>`;
+    btns.innerHTML = html;
+  }
+
+  function goPage(p) { currentPage = p; renderTable(); }
+
+  // ══════════════════════════════════════
+  //  STATS
+  // ══════════════════════════════════════
+  function updateStats() {
+    const from = document.getElementById('stats-from').value;
+    const to   = document.getElementById('stats-to').value;
+
+    const base = records.filter(r => {
+      if (from && r.date < from) return false;
+      if (to   && r.date > to)   return false;
+      return true;
+    });
+
+    const total  = base.length;
+    const sum    = base.reduce((s, r) => s + parseFloat(r.amount || 0), 0);
+    const paid   = base.filter(r => r.status === '已收款').reduce((s, r) => s + parseFloat(r.amount || 0), 0);
+    const unpaid = base.filter(r => r.status === '未收款').reduce((s, r) => s + parseFloat(r.amount || 0), 0);
+    document.getElementById('stat-total').textContent  = total;
+    document.getElementById('stat-amount').textContent = sum.toFixed(2);
+    document.getElementById('stat-paid').textContent   = paid.toFixed(2);
+    document.getElementById('stat-unpaid').textContent = unpaid.toFixed(2);
+
+    document.getElementById('stat-total').closest('.stat-card').querySelector('.label').textContent =
+      (from || to) ? `总记录数（${from||'…'} 至 ${to||'…'}）` : '总记录数';
+  }
+
+  let activeStatsRange = '';
+  function setStatsRange(range) {
+    const now = new Date();
+    const fmt = d => d.toISOString().slice(0, 10);
+    let from = '', to = '';
+
+    if (range === 'today') {
+      from = to = fmt(now);
+    } else if (range === 'week') {
+      const day = now.getDay() || 7;
+      const mon = new Date(now); mon.setDate(now.getDate() - day + 1);
+      from = fmt(mon); to = fmt(now);
+    } else if (range === 'month') {
+      from = fmt(new Date(now.getFullYear(), now.getMonth(), 1));
+      to   = fmt(now);
+    } else if (range === 'quarter') {
+      const q = Math.floor(now.getMonth() / 3);
+      from = fmt(new Date(now.getFullYear(), q * 3, 1));
+      to   = fmt(now);
+    } else if (range === 'year') {
+      from = `${now.getFullYear()}-01-01`;
+      to   = fmt(now);
+    } else {
+      from = to = '';
+    }
+
+    document.getElementById('stats-from').value = from;
+    document.getElementById('stats-to').value   = to;
+
+    activeStatsRange = range;
+    ['today','week','month','quarter','year'].forEach(k => {
+      const el = document.getElementById('qbtn-' + k);
+      if (el) el.classList.toggle('active', k === range);
+    });
+
+    updateStats();
+  }
+
+  // ══════════════════════════════════════
+  //  CSV EXPORT
+  // ══════════════════════════════════════
+  function exportCSV() {
+    if (filtered.length === 0) { showToast('没有可导出的数据', 'warn'); return; }
+    const header = ['日期','车牌','出发地','途经地','目的地','金额','司机','付款人','收款人','收款情况','备注','录入人'];
+    const rows   = filtered.map(r =>
+      [r.date, r.plate, r.origin, r.via, r.dest, r.amount, r.driver, r.payer, r.receiver, r.status, r.note, r.createdBy||'']
+      .map(c => `"${(c||'').replace(/"/g,'""')}"`));
+    const csv  = [header, ...rows].map(r => r.join(',')).join('\n');
+    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+    const a    = document.createElement('a');
+    a.href     = URL.createObjectURL(blob);
+    a.download = `行程记录_${today}.csv`;
+    a.click();
+    showToast('CSV 已导出 ✓');
+  }
+
+  // ══════════════════════════════════════
+  //  CLEAR ALL (超级管理员)
+  // ══════════════════════════════════════
+  function clearAll() {
+    if (!isSuper()) { showToast('无权限', 'warn'); return; }
+    showConfirm('确认清空所有记录？此操作不可恢复！', () => {
+      records = [];
+      save();
+      applyFilter();
+      showToast('已清空所有记录');
+    }, '清空全部');
+  }
+
+  // ══════════════════════════════════════
+  //  HELPERS
+  // ══════════════════════════════════════
+  function v(id) { return document.getElementById(id).value; }
+  function esc(s) { return (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  function badgeClass(s) {
+    return s === '已收款' ? 'badge-paid' : s === '未收款' ? 'badge-unpaid' : 'badge-partial';
+  }
+  function clearForm() {
+    ['f-origin','f-via','f-dest','f-amount','f-payer','f-note'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('f-date').value     = today;
+    document.getElementById('f-plate').value    = '';
+    document.getElementById('f-driver').value   = '';
+    document.getElementById('f-receiver').value = '';
+    document.getElementById('f-status').value   = '已收款';
+  }
+
+  let toastTimer;
+  function showToast(msg, type) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.style.background = type === 'warn' ? '#b45309' : '#1e293b';
+    t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.remove('show'), 2500);
+  }
+
+  // ── Confirm Dialog ──
+  function showConfirm(msg, onOk, title) {
+    document.getElementById('confirm-msg').textContent   = msg;
+    document.getElementById('confirm-title').textContent = title || '确认操作';
+    const okBtn = document.getElementById('confirm-ok-btn');
+    okBtn.textContent = '确认删除';
+    okBtn.className   = 'btn btn-danger';
+    okBtn.onclick = function() { closeConfirm(); onOk(); };
+    document.getElementById('confirm-modal').classList.add('show');
+  }
+  function closeConfirm() {
+    document.getElementById('confirm-modal').classList.remove('show');
+  }
+
+  // ── Modal Overlay Close ──
+  document.getElementById('edit-modal').addEventListener('click', function(e) {
+    if (e.target === this) closeEditModal();
+  });
+  document.getElementById('config-modal').addEventListener('click', function(e) {
+    if (e.target === this) closeConfig();
+  });
+  document.getElementById('confirm-modal').addEventListener('click', function(e) {
+    if (e.target === this) closeConfirm();
+  });
+  document.getElementById('user-mgr-modal').addEventListener('click', function(e) {
+    if (e.target === this) closeUserMgr();
+  });
+
+  // ══════════════════════════════════════
+  //  BOOT
+  // ══════════════════════════════════════
+  initUsers();   // 确保默认账号存在
+  routeByRole(); // 根据当前会话路由
+</script>
+</body>
+</html>
