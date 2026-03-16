@@ -729,7 +729,7 @@
     <div class="login-field">
       <label>用户名</label>
       <input type="text" id="login-username" placeholder="请输入用户名"
-        onkeydown="if(event.key==='Enter')doLogin()" autocomplete="username" />
+        onkeydown="if(event.key==='Enter'){event.preventDefault();document.getElementById('login-password').focus();}" autocomplete="username" />
     </div>
     <div class="login-field">
       <label>密码</label>
@@ -738,9 +738,6 @@
     </div>
     <button class="login-btn" onclick="doLogin()">登 录</button>
     <div class="login-error" id="login-error"></div>
-    <div style="text-align:center;margin-top:14px">
-      <a onclick="resetAdminPwd()" style="font-size:.78rem;color:var(--muted);cursor:pointer;text-decoration:underline">忘记密码？重置超级管理员密码</a>
-    </div>
   </div>
 </div>
 
